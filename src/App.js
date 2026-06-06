@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { FUNDS, META } from "./data/funds";
+import { useState, useEffect } from "react";
+import { FUNDS as FALLBACK_FUNDS, META as FALLBACK_META } from "./data/funds";
 import Countdown from "./components/Countdown";
 import Bucket from "./components/Bucket";
 import FilterBar from "./components/FilterBar";
@@ -12,21 +12,54 @@ const COLORS = {
   "no":       "#4a6680",
 };
 
+const DATA_URL = "/data/funds.json";
+
 export default function App() {
   const [filter, setFilter] = useState("all");
   const [email, setEmail]   = useState("");
   const [signed, setSigned] = useState(false);
+  const [funds, setFunds]   = useState(FALLBACK_FUNDS);
+  const [meta, setMeta]     = useState(FALLBACK_META);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]   = useState(null);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  async function fetchData() {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`${DATA_URL}?t=${Date.now()}`);
+      if (!response.ok) {
+        throw new Error(`Data fetch failed: ${response.status}`);
+      }
+
+      const json = await response.json();
+      setFunds(json.FUNDS ?? FALLBACK_FUNDS);
+      setMeta(json.META ?? FALLBACK_META);
+    } catch (err) {
+      console.error(err);
+      setError("Unable to load live data. Showing the latest local snapshot.");
+      setFunds(FALLBACK_FUNDS);
+      setMeta(FALLBACK_META);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const counts = {
-    all:       FUNDS.length,
-    "pre-ipo":  FUNDS.filter((f) => f.bucket === "pre-ipo").length,
-    "post-ipo": FUNDS.filter((f) => f.bucket === "post-ipo").length,
-    no:         FUNDS.filter((f) => f.bucket === "no").length,
+    all:       funds.length,
+    "pre-ipo":  funds.filter((f) => f.bucket === "pre-ipo").length,
+    "post-ipo": funds.filter((f) => f.bucket === "post-ipo").length,
+    no:         funds.filter((f) => f.bucket === "no").length,
   };
 
   function filtered(bucket) {
-    const funds = FUNDS.filter((f) => f.bucket === bucket);
-    if (filter === "all" || filter === bucket) return funds;
+    const selectedFunds = funds.filter((f) => f.bucket === bucket);
+    if (filter === "all" || filter === bucket) return selectedFunds;
     return [];
   }
 
@@ -51,7 +84,11 @@ export default function App() {
         {/* Hero */}
         <section className="hero">
           <div className="container">
-            <div className="eyebrow">IPO Tracker · Updated {META.last_updated}</div>
+            <div className="eyebrow">
+              IPO Tracker · Updated {meta.last_updated}
+              {loading && <span className="status-text"> · Refreshing…</span>}
+              {!loading && error && <span className="status-text error"> · {error}</span>}
+            </div>
             <h1>Which funds will<br />own <em>SpaceX?</em></h1>
             <p className="hero-sub">
               SpaceX is targeting a <strong>June 12, 2026 IPO</strong> — potentially
@@ -59,11 +96,12 @@ export default function App() {
               in days, others wait until December. Here's every major fund,
               bucketed by when and why.
             </p>
-            <Countdown />
+            <Countdown meta={meta} />
           </div>
         </section>
 
         {/* Main content */}
+
         <main className="main">
           <div className="container">
 
@@ -73,9 +111,18 @@ export default function App() {
               (13-F / N-PORT), AAII's 2026 Mutual Fund Guide, Morningstar, and
               InvestmentNews. Post-IPO weights will be pulled automatically from
               fund issuer CSV files and SEC EDGAR once SpaceX trades.
+              <button
+                className="refresh-button"
+                type="button"
+                onClick={fetchData}
+                disabled={loading}
+              >
+                {loading ? "Refreshing…" : "Refresh data"}
+              </button>
             </div>
 
             {/* Filter bar */}
+
             <FilterBar active={filter} onChange={setFilter} counts={counts} />
 
             {/* Bucket 1 — Pre-IPO */}

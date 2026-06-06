@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
-import { META } from "../data/funds";
 
-export default function Countdown() {
-  const [time, setTime] = useState(getTime());
-
-  function getTime() {
-    const diff = new Date(META.spacex_ipo_date) - new Date();
+export default function Countdown({ meta }) {
+  const [time, setTime] = useState(() => {
+    const targetDate = new Date(meta?.spacex_ipo_date || "2026-06-12T09:30:00-04:00");
+    const diff = targetDate - new Date();
     if (diff <= 0) return null;
     return {
       days:  Math.floor(diff / 864e5),
@@ -13,12 +11,25 @@ export default function Countdown() {
       mins:  Math.floor((diff % 36e5) / 6e4),
       secs:  Math.floor((diff % 6e4) / 1e3),
     };
-  }
+  });
 
   useEffect(() => {
+    const getTime = () => {
+      const targetDate = new Date(meta?.spacex_ipo_date || "2026-06-12T09:30:00-04:00");
+      const diff = targetDate - new Date();
+      if (diff <= 0) return null;
+      return {
+        days:  Math.floor(diff / 864e5),
+        hours: Math.floor((diff % 864e5) / 36e5),
+        mins:  Math.floor((diff % 36e5) / 6e4),
+        secs:  Math.floor((diff % 6e4) / 1e3),
+      };
+    };
+
+    setTime(getTime());
     const t = setInterval(() => setTime(getTime()), 1000);
     return () => clearInterval(t);
-  }, []);
+  }, [meta]);
 
   if (!time) {
     return (

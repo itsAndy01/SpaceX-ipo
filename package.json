@@ -15,6 +15,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "generate-data": "node scripts/generate-funds-json.mjs",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
