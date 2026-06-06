@@ -111,14 +111,6 @@ export default function App() {
               (13-F / N-PORT), AAII's 2026 Mutual Fund Guide, Morningstar, and
               InvestmentNews. Post-IPO weights will be pulled automatically from
               fund issuer CSV files and SEC EDGAR once SpaceX trades.
-              <button
-                className="refresh-button"
-                type="button"
-                onClick={fetchData}
-                disabled={loading}
-              >
-                {loading ? "Refreshing…" : "Refresh data"}
-              </button>
             </div>
 
             {/* Filter bar */}
