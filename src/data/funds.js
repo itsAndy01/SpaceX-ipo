@@ -2,6 +2,7 @@
 // Source: AAII 2026 Mutual Fund Guide, Morningstar, InvestmentNews,
 //         fund company filings through Q1 2026.
 // Post-IPO weights will be pulled from fund issuer CSVs + SEC EDGAR.
+import { TOP200 } from "./top200";
 
 export const META = {
   last_updated: "June 6, 2026",
@@ -1490,4 +1491,5 @@ export const FUNDS = [
     source: null,
     source_url: null,
   },
+  ...TOP200,
 ];

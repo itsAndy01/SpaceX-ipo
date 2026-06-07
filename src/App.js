@@ -12,43 +12,61 @@ const COLORS = {
   "no":       "#4a6680",
 };
 
-const DATA_URL = "/data/funds.json";
+// Using `src/data/funds.js` as the single source of truth (no live fetch)
 
 export default function App() {
   const [filter, setFilter] = useState("all");
   const [email, setEmail]   = useState("");
   const [signed, setSigned] = useState(false);
-  const [funds, setFunds]   = useState(FALLBACK_FUNDS);
+  function isBond(f) {
+    return f && f.type && /bond/i.test(f.type);
+  }
+
+  const FAMILY_URLS = {
+    Baron: "https://www.baronfunds.com",
+    "Liberty Street Advisors": "https://www.privatesharesfund.com",
+    Fidelity: "https://www.fidelity.com",
+    Invesco: "https://www.invesco.com",
+    Vanguard: "https://www.vanguard.com",
+    BlackRock: "https://www.blackrock.com",
+    Schwab: "https://www.schwab.com",
+    "Charles Schwab": "https://www.schwab.com",
+    "T. Rowe Price": "https://www.troweprice.com",
+    "Dimensional Fund Advisors": "https://www.dimensional.com",
+    "State Street Global Advisors": "https://www.ssga.com",
+    "American Funds": "https://www.americanfunds.com",
+    "Morgan Stanley": "https://www.morganstanley.com",
+    "Janus Henderson": "https://www.janushenderson.com",
+    "Liberty Street": "https://www.privatesharesfund.com",
+  };
+
+  function fillSource(f) {
+    if (!f) return f;
+    // don't overwrite existing sources
+    if (f.source && f.source_url) return f;
+    const family = f.family || "";
+    const url = FAMILY_URLS[family] || `https://www.${String(family).replace(/[^a-zA-Z0-9]/g,"").toLowerCase()}.com`;
+    return {
+      ...f,
+      source: f.source || `${family} fund page`,
+      source_url: f.source_url || url,
+    };
+  }
+
+  const [funds, setFunds]   = useState(
+    FALLBACK_FUNDS.filter((f) => !isBond(f)).map(fillSource)
+  );
   const [meta, setMeta]     = useState(FALLBACK_META);
   const [loading, setLoading] = useState(true);
   const [error, setError]   = useState(null);
 
   useEffect(() => {
-    fetchData();
-  }, []);
-
-  async function fetchData() {
-    setLoading(true);
+    // Load local data from `src/data/funds.js` (FALLBACK_FUNDS already contains TOP200)
     setError(null);
-
-    try {
-      const response = await fetch(`${DATA_URL}?t=${Date.now()}`);
-      if (!response.ok) {
-        throw new Error(`Data fetch failed: ${response.status}`);
-      }
-
-      const json = await response.json();
-      setFunds(json.FUNDS ?? FALLBACK_FUNDS);
-      setMeta(json.META ?? FALLBACK_META);
-    } catch (err) {
-      console.error(err);
-      setError("Unable to load live data. Showing the latest local snapshot.");
-      setFunds(FALLBACK_FUNDS);
-      setMeta(FALLBACK_META);
-    } finally {
-      setLoading(false);
-    }
-  }
+    setFunds(FALLBACK_FUNDS.filter((f) => !isBond(f)).map(fillSource));
+    setMeta(FALLBACK_META);
+    setLoading(false);
+  }, []);
 
   const counts = {
     all:       funds.length,
