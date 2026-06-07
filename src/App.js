@@ -12,6 +12,37 @@ const COLORS = {
   "no":       "#4a6680",
 };
 
+const FAMILY_URLS = {
+  Baron: "https://www.baronfunds.com",
+  "Liberty Street Advisors": "https://www.privatesharesfund.com",
+  Fidelity: "https://www.fidelity.com",
+  Invesco: "https://www.invesco.com",
+  Vanguard: "https://www.vanguard.com",
+  BlackRock: "https://www.blackrock.com",
+  Schwab: "https://www.schwab.com",
+  "Charles Schwab": "https://www.schwab.com",
+  "T. Rowe Price": "https://www.troweprice.com",
+  "Dimensional Fund Advisors": "https://www.dimensional.com",
+  "State Street Global Advisors": "https://www.ssga.com",
+  "American Funds": "https://www.americanfunds.com",
+  "Morgan Stanley": "https://www.morganstanley.com",
+  "Janus Henderson": "https://www.janushenderson.com",
+  "Liberty Street": "https://www.privatesharesfund.com",
+};
+
+function fillSource(f) {
+  if (!f) return f;
+  // don't overwrite existing sources
+  if (f.source && f.source_url) return f;
+  const family = f.family || "";
+  const url = FAMILY_URLS[family] || `https://www.${String(family).replace(/[^a-zA-Z0-9]/g,"").toLowerCase()}.com`;
+  return {
+    ...f,
+    source: f.source || `${family} fund page`,
+    source_url: f.source_url || url,
+  };
+}
+
 // Using `src/data/funds.js` as the single source of truth (no live fetch)
 
 export default function App() {
@@ -20,37 +51,6 @@ export default function App() {
   const [signed, setSigned] = useState(false);
   function isBond(f) {
     return f && f.type && /bond/i.test(f.type);
-  }
-
-  const FAMILY_URLS = {
-    Baron: "https://www.baronfunds.com",
-    "Liberty Street Advisors": "https://www.privatesharesfund.com",
-    Fidelity: "https://www.fidelity.com",
-    Invesco: "https://www.invesco.com",
-    Vanguard: "https://www.vanguard.com",
-    BlackRock: "https://www.blackrock.com",
-    Schwab: "https://www.schwab.com",
-    "Charles Schwab": "https://www.schwab.com",
-    "T. Rowe Price": "https://www.troweprice.com",
-    "Dimensional Fund Advisors": "https://www.dimensional.com",
-    "State Street Global Advisors": "https://www.ssga.com",
-    "American Funds": "https://www.americanfunds.com",
-    "Morgan Stanley": "https://www.morganstanley.com",
-    "Janus Henderson": "https://www.janushenderson.com",
-    "Liberty Street": "https://www.privatesharesfund.com",
-  };
-
-  function fillSource(f) {
-    if (!f) return f;
-    // don't overwrite existing sources
-    if (f.source && f.source_url) return f;
-    const family = f.family || "";
-    const url = FAMILY_URLS[family] || `https://www.${String(family).replace(/[^a-zA-Z0-9]/g,"").toLowerCase()}.com`;
-    return {
-      ...f,
-      source: f.source || `${family} fund page`,
-      source_url: f.source_url || url,
-    };
   }
 
   const [funds, setFunds]   = useState(
